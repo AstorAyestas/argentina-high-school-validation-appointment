@@ -41,11 +41,11 @@ jobs:
         run: npm run check
         env:
           TELEGRAM_KEY: ${{ secrets.TELEGRAM_KEY }}
-          TELEGRAM_CHANNEL: ${{ secrets.TELEGRAM_CHANNEL }}
+          TELEGRAM_CHANNEL: ${{ env.TELEGRAM_CHANNEL }}
           TELEGRAM_GROUP: ${{ secrets.TELEGRAM_GROUP }}
           MJ_APIKEY_PUBLIC: ${{ secrets.MJ_APIKEY_PUBLIC }}
           MJ_APIKEY_PRIVATE: ${{ secrets.MJ_APIKEY_PRIVATE }}
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          EMAIL_FROM_NAME: ${{ secrets.EMAIL_FROM_NAME }}
-          EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          EMAIL_TO_NAME: ${{ secrets.EMAIL_TO_NAME }}
+          EMAIL_FROM: ${{ env.EMAIL_FROM }}
+          EMAIL_FROM_NAME: ${{ env.EMAIL_FROM_NAME }}
+          EMAIL_TO: ${{ env.EMAIL_TO }}
+          EMAIL_TO_NAME: ${{ env.EMAIL_TO_NAME }}
