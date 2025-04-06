@@ -1,0 +1,51 @@
+name: Run Program
+
+on:
+  workflow_dispatch:
+  # Uncomment to run every hour at minute 0
+  # schedule:
+  #   - cron: '0 * * * *' 
+
+jobs:
+  check-appointments:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright + dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Run check script
+        run: npm run check
+        env:
+          TELEGRAM_KEY: ${{ secrets.TELEGRAM_KEY }}
+          TELEGRAM_CHANNEL: ${{ secrets.TELEGRAM_CHANNEL }}
+          TELEGRAM_GROUP: ${{ secrets.TELEGRAM_GROUP }}
+          MJ_APIKEY_PUBLIC: ${{ secrets.MJ_APIKEY_PUBLIC }}
+          MJ_APIKEY_PRIVATE: ${{ secrets.MJ_APIKEY_PRIVATE }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_FROM_NAME: ${{ secrets.EMAIL_FROM_NAME }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_TO_NAME: ${{ secrets.EMAIL_TO_NAME }}

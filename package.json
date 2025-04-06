@@ -1,0 +1,22 @@
+{
+  "name": "cita-titulo-validez-arg",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test-with-ui": "npx playwright test --ui",
+    "test": "npx playwright test --project=chromium",
+    "test-headlessly": "npx playwright install --with-deps --no-shell",
+    "show-report": "npx playwright show-report",
+    "check": "npx tsx --env-file=.env index.ts"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "aayestas",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "@playwright/test": "^1.50.1",
+    "@types/node": "^22.13.2",
+    "typescript": "^5.7.3"
+  }
+}
