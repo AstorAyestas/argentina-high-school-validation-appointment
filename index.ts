@@ -76,9 +76,11 @@ async function sendEmailMessage() {
 async function main() {
   const appointmentAvailable = await checkAppointmentAvailability();
   if (appointmentAvailable) {
+    console.log("🪚 Sending 🚨There are appointments available...");
     await sendEmailMessage();
     await sendTelegramMessage("🚨There are appointments available");
   } else {
+    console.log("🪚 Sending There are no appointments available...");
     await sendTelegramMessage("There are no appointments available");
   }
 }
