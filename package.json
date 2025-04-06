@@ -7,7 +7,8 @@
     "test": "npx playwright test --project=chromium",
     "test-headlessly": "npx playwright install --with-deps --no-shell",
     "show-report": "npx playwright show-report",
-    "check": "npx tsx --env-file=.env index.ts"
+    "check": "npx tsx --env-file=.env index.ts",
+    "check-ci": "npx tsx index.ts"
   },
   "type": "module",
   "keywords": [],

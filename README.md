@@ -45,6 +45,12 @@ Run the appointment checker:
 
 ```sh
 npm run check
+
+Run the appointment checker in the github action:
+
+```sh
+npm run check-ci
+
 ```
 
 Run tests:

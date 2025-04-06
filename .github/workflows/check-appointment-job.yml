@@ -38,7 +38,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run check script
-        run: npm run check
+        run: npm run check-ci
         env:
           TELEGRAM_KEY: ${{ secrets.TELEGRAM_KEY }}
           TELEGRAM_CHANNEL: ${{ env.TELEGRAM_CHANNEL }}
