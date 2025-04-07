@@ -5,9 +5,9 @@ on:
   # Uncomment to run every hour at minute 0
   # schedule:
   #   - cron: '0 * * * *'
-  # run at every 30th minute.
+  # runs three times an hour
   schedule:
-  - cron: '*/30 * * * *'
+  - cron: '8,28,48 * * * *'
 
 
 jobs:
