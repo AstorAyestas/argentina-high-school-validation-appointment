@@ -1,36 +1,76 @@
-import { chromium, expect } from "@playwright/test";
-import { NO_APPOINTMENTS_MESSAGE, SITE_PAGE } from "./constants";
+import { chromium, expect, Page } from "@playwright/test";
+import {
+  NO_APPOINTMENTS_MESSAGE,
+  SITE_PAGE,
+  SYSTEM_OUT_OF_SERVICE,
+} from "./constants";
 
-async function checkAppointmentAvailability() {
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext();
-  const page = await context.newPage();
+type AppointmentStatus = {
+  isAvailable: boolean;
+  error?: Error;
+};
 
-  const message = new RegExp(NO_APPOINTMENTS_MESSAGE);
+async function checkAppointmentStatus(
+  expectedMessage: string,
+): Promise<AppointmentStatus> {
+  const browser = await chromium.launch({
+    headless: true,
+    args: [
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+    ],
+  });
+
+  let context;
+  let page: Page;
 
   try {
-    await page.goto(SITE_PAGE);
-    const expectedText = NO_APPOINTMENTS_MESSAGE.replace(/<br>/g, "");
+    context = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+    });
 
-    const alertText = await page.locator(".alert-danger").innerText();
+    page = await context.newPage();
+
+    await page.goto(SITE_PAGE, { timeout: 30000 });
+
+    const alertElement = await page.waitForSelector(".alert-danger", {
+      timeout: 10000,
+    });
+    const alertText = await alertElement.innerText();
+
+    const expectedText = expectedMessage.replace(/<br>/g, "");
     const normalizedText = alertText?.trim().replace(/\s+/g, " ");
 
-    expect(normalizedText).toContain(expectedText);
-    return false;
+    const isMessageMatching = normalizedText.includes(expectedText);
+
+    return {
+      isAvailable: !isMessageMatching,
+    };
   } catch (error) {
-    console.error("🪚 error:", error);
-    return true;
+    console.error(`Error checking appointment status: ${error.message}`);
+    return {
+      isAvailable: false,
+      error: error instanceof Error ? error : new Error(String(error)),
+    };
   } finally {
+    await context?.close();
     await browser.close();
   }
 }
 
 async function sendTelegramMessage(message: string) {
   const request = await fetch(
-    `https://api.telegram.org/bot${process.env.TELEGRAM_KEY}/sendMessage?chat_id=${process.env.TELEGRAM_CHANNEL}&text=${encodeURIComponent(message)}`,
+    `https://api.telegram.org/bot${
+      process.env.TELEGRAM_KEY
+    }/sendMessage?chat_id=${
+      process.env.TELEGRAM_CHANNEL
+    }&text=${encodeURIComponent(message)}`,
     { method: "GET", redirect: "follow" },
   );
-  const response = await request.json();
+  await request.json();
 }
 
 async function sendEmailMessage() {
@@ -39,7 +79,9 @@ async function sendEmailMessage() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${Buffer.from(`${process.env.MJ_APIKEY_PUBLIC}:${process.env.MJ_APIKEY_PRIVATE}`).toString("base64")}`,
+        Authorization: `Basic ${Buffer.from(
+          `${process.env.MJ_APIKEY_PUBLIC}:${process.env.MJ_APIKEY_PRIVATE}`,
+        ).toString("base64")}`,
       },
       body: JSON.stringify({
         SandboxMode: false,
@@ -74,15 +116,32 @@ async function sendEmailMessage() {
 }
 
 async function main() {
-  const appointmentAvailable = await checkAppointmentAvailability();
-  if (appointmentAvailable) {
-    console.log("🪚 Sending 🚨There are appointments available...");
-    await sendEmailMessage();
-    await sendTelegramMessage("🚨There are appointments available");
+  const [noAppointmentsStatus, outServiceStatus] = await Promise.all([
+    checkAppointmentStatus(NO_APPOINTMENTS_MESSAGE),
+    checkAppointmentStatus(SYSTEM_OUT_OF_SERVICE),
+  ]);
+
+  // Check for errors first
+  if (noAppointmentsStatus.error || outServiceStatus.error) {
+    console.error(
+      "🔴 Error checking appointments, sending error notification...",
+    );
+    await sendTelegramMessage("⚠️ Error checking appointments availability");
+    return;
+  }
+
+  // Check availability
+  if (noAppointmentsStatus.isAvailable && outServiceStatus.isAvailable) {
+    console.log("🟢 Appointments available! Sending notifications...");
+    await Promise.all([
+      sendEmailMessage(),
+      sendTelegramMessage(
+        "🚨 There are appointments available, Please go to this link: https://titulosvalidez.educacion.gob.ar/validez/detitulos/",
+      ),
+    ]);
   } else {
-    console.log("🪚 Sending There are no appointments available...");
-    await sendTelegramMessage("There are no appointments available");
+    console.log("🔵 No appointments available...");
+    await sendTelegramMessage("ℹ️ There are no appointments available");
   }
 }
-
 main();
