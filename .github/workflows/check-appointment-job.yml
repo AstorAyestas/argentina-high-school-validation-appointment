@@ -6,8 +6,8 @@ on:
   # schedule:
   #   - cron: '0 * * * *'
   # runs three times an hour
-  schedule:
-  - cron: '8,28,48 * * * *'
+  # schedule:
+  # - cron: '8,28,48 * * * *'
 
 
 jobs:
